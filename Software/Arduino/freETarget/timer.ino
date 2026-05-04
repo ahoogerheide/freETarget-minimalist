@@ -136,7 +136,7 @@ ISR(TIMER1_CAPT_vect) {
   //Disable Interrupts
   TIMSK1 = B00000000;
   // stopt timer
-  TCCR1B = B00000000;
+  TCCR1B = B01000000;
   // transfer time into capture register
   T[0] = ICR1;
 }
@@ -145,7 +145,7 @@ ISR(TIMER3_CAPT_vect) {
   //Disable Interrupts
   TIMSK3 = B00000000;
   // stopt timer
-  TCCR3B = B00000000;
+  TCCR3B = B01000000;
   // transfer time into capture register
   T[1] = ICR3;
 }
@@ -154,7 +154,7 @@ ISR(TIMER4_CAPT_vect) {
   //Disable Interrupts
   TIMSK4 = B00000000;
   // stopt timer
-  TCCR4B = B00000000;
+  TCCR4B = B01000000;
   // transfer time into capture register
   T[2] = ICR4;
 }
@@ -163,7 +163,7 @@ ISR(TIMER5_CAPT_vect) {
   //Disable Interrupts
   TIMSK5 = B00000000;
   // stopt timer
-  TCCR5B = B00000000;
+  TCCR5B = B01000000;
   // transfer time into capture register
   T[3] = ICR5;
 }
@@ -172,13 +172,13 @@ ISR(TIMER5_CAPT_vect) {
  * 
  * function: ISR
  * 
- * brief:    Timer 1 Interrupt
+ * brief:    Timer 2 Interrupt
  * 
  * return:   None
  * 
  *-----------------------------------------------------
  *
- * Timer 1 samples the inputs and when all of the 
+ * Timer 2 samples the inputs and when all of the 
  * sendor inputs are present, the counters are
  * read and made available to the software
  * 
@@ -206,13 +206,6 @@ ISR(TIMER2_COMPA_vect)
   unsigned int  i;                              // Iteration counter
   
   TCNT2  = 0;                                   // Reset the counter back to 0
-
-// trigger only every 2nd time to get 1 kHZ
-if (timer2_divider) {
-  timer2_divider = false;
-  return;
-}
-timer2_divider = true;
 /*
  * Refresh the timers
  */

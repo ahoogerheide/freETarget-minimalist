@@ -173,23 +173,23 @@ unsigned int is_running (void)
  *-----------------------------------------------------*/
 void arm_timers(void)
 {
-  // Init TCCRxA
-  TCCR1A = 0;
-  TCCR3A = 0;
-  TCCR4A = 0;
-  TCCR5A = 0;
+  // disable timer interrupts
+  TIMSK1 = 0;
+  TIMSK3 = 0;
+  TIMSK4 = 0;
+  TIMSK5 = 0;
 
-  //clear interrrupts
+  //clear any pending interrrupts
   TIFR1 |= (1 << ICF1);
   TIFR3 |= (1 << ICF3);
   TIFR4 |= (1 << ICF4);
   TIFR5 |= (1 << ICF5);
 
-  // Init TIMSKx: 7, 6, 5 - ICU, 4, 3, 2, 1, 0 - OVF
-  TIMSK1 = B00100000;  // Enable Timer OVF & CAPT Interrupts
-  TIMSK3 = B00100000;
-  TIMSK4 = B00100000;
-  TIMSK5 = B00100000;
+  // Init TCCRxA
+  TCCR1A = 0;
+  TCCR3A = 0;
+  TCCR4A = 0;
+  TCCR5A = 0;
 
   // offset due to delayed start
   TCNT1 = 0;
@@ -197,12 +197,22 @@ void arm_timers(void)
   TCNT4 = 4;
   TCNT5 = 6;
 
-  // TCCRxB: 7 - noise canceling, 6 - edge (0 falling), 5, 4, 3, 2:0 - prescaler (1 system clock)
+  // start timers in one sequence
+  char old_sreg = SREG;
+  cli();
+  // TCCRxB: 7 - noise canceling, 6 - edge (1 rising, 0 falling), 5, 4, 3, 2:0 - prescaler (1 system clock)
   // 16 MHz clock, 62.5 ns/count
-  TCCR1B = B10000001;  // Internal Clock, Prescaler = 1, ICU Filter DE, ICU Pin falling
-  TCCR3B = B10000001;
-  TCCR4B = B10000001;
-  TCCR5B = B10000001;
+  TCCR1B = B01000001;  // Internal Clock, Prescaler = 1, no noise filtering, ICU Pin falling
+  TCCR3B = B01000001;
+  TCCR4B = B01000001;
+  TCCR5B = B01000001;
+  SREG = old_sreg;
+
+  // Init TIMSKx: 7, 6, 5 - ICU, 4, 3, 2, 1, 0 - OVF
+  TIMSK1 = B00100000;  // Enable Timer ICIE Interrupts
+  TIMSK3 = B00100000;
+  TIMSK4 = B00100000;
+  TIMSK5 = B00100000;
  
   return;
 }
@@ -217,10 +227,10 @@ void clear_running(void)          // Reset the RUN flip Flop
  */
 void stop_timers(void)
 {
-  TCCR1B = B00000000;  
-  TCCR3B = B00000000;
-  TCCR4B = B00000000;
-  TCCR5B = B00000000;
+  TCCR1B = B01000000;  
+  TCCR3B = B01000000;
+  TCCR4B = B01000000;
+  TCCR5B = B01000000;
   return;
 }
 
@@ -400,34 +410,11 @@ void read_timers
 {
   unsigned int i;
 
-  long T_correct;
-  long T_diff;
-  
-  *(timer_ptr + 0) = 20000;
-  
-  for (i=1; i<=3; i++)
+  int16_t delta = 0x4000 - T[0]; // reference
+
+  for (i=0; i<=3; i++)
   {
-  
-    T_diff = (long)T[0]-long(T[i]);
-    if (T_diff > 10000)
-    {
-        T_correct = T_diff - 45536;
-    }
-    else if (T_diff < - 10000)
-    {
-        T_correct = T_diff + 85536;
-    }
-    else
-    {
-        T_correct = T_diff + 20000;
-    }
-
-
-    
-    // Serial.print("-");
-    // Serial.println(T_correct);
-  
-    *(timer_ptr + i) = T_correct;
+    *(timer_ptr + i) = T[i] + delta;
   }
 
   return;

@@ -383,7 +383,7 @@ unsigned int arm(void)
     set_LED(NORTH_FAILED);           // Fault code North
     delay(ONE_SECOND);
   }
-  if ((!sensor_status & B00000010))
+  if (!(sensor_status & B00000010))
   {
     Serial.print(T("\r\n{ \"Fault\": \"EAST\" }"));
     set_LED(EAST_FAILED);           // Fault code East
