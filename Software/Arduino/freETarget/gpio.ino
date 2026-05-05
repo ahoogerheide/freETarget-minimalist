@@ -144,12 +144,12 @@ unsigned int is_running (void)
 {
   unsigned int i;
   
-  i = (TCCR1B & 1) +  ((TCCR3B & 1) << 1) + ((TCCR4B & 1) << 2) + ((TCCR5B & 1) <<3);
+  i = (TCCR1B & 1) +  ((TCCR3B & 1) << 1) + ((TCCR4B & 1) << 2) + ((TCCR5B & 1) << 3);
 
  /*
   *  Return the running mask
   */
-  return i;
+  return (i ^ B00001111);
   }
 
 /*-----------------------------------------------------
@@ -202,7 +202,7 @@ void arm_timers(void)
   cli();
   // TCCRxB: 7 - noise canceling, 6 - edge (1 rising, 0 falling), 5, 4, 3, 2:0 - prescaler (1 system clock)
   // 16 MHz clock, 62.5 ns/count
-  TCCR1B = B01000001;  // Internal Clock, Prescaler = 1, no noise filtering, ICU Pin falling
+  TCCR1B = B01000001;  // Internal Clock, Prescaler = 1, no noise filtering, ICU Pin rising
   TCCR3B = B01000001;
   TCCR4B = B01000001;
   TCCR5B = B01000001;

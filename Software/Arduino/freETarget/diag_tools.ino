@@ -142,7 +142,7 @@ void self_test(uint16_t test)
         }
       }
   
-      while ( is_running() == B00001111 )
+      while ( is_running() == 0 )
       {
         continue;
       }

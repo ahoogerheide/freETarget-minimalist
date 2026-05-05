@@ -229,7 +229,7 @@ ISR(TIMER2_COMPA_vect)
   switch (isr_state)
   {
     case PORT_STATE_IDLE:                       // Idle, Wait for something to show up
-      if ( pin != B00001111 )                           // Something has triggered, some timer have stopped
+      if ( pin != 0 )                           // Something has triggered, some timer have stopped
       { 
         isr_timer = (int)(json_sensor_dia / 0.30 / 1000.0) + 1; // Start the wait timer
         isr_state = PORT_STATE_WAIT;            // Got something wait for all of the sensors tro trigger
@@ -237,7 +237,7 @@ ISR(TIMER2_COMPA_vect)
       break;
           
     case PORT_STATE_WAIT:                       // Something is present, wait for all of the inputs
-      if ( (pin == 0)                           // We have all of the inputs
+      if ( (pin == B00001111)                           // We have all of the inputs
           || (isr_timer == 0) )                 // or ran out of time.  Read the timers and restart
       {
         aquire();                               // Read the counters
@@ -248,10 +248,18 @@ ISR(TIMER2_COMPA_vect)
       break;
       
     case PORT_STATE_DONE:                       // Waiting for the ringing to stop
-      if ( isr_timer == 0 )                   // Make sure there is no rigning
+      if ( pin != 0 )                           // Something got latched
       {
-        arm_timers();                         // and arm for the next time
-        isr_state = PORT_STATE_IDLE;          // and go back to idle
+        isr_timer = json_min_ring_time;
+        clear_running();                        // Reset and try later
+      }
+      else
+      {
+        if ( isr_timer == 0 )                   // Make sure there is no rigning
+        {
+          arm_timers();                         // and arm for the next time
+          isr_state = PORT_STATE_IDLE;          // and go back to idle
+        }
       }
       break;
   }

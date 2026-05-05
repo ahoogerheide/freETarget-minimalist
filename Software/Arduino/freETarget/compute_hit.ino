@@ -153,6 +153,20 @@ unsigned int compute_hit
     return MISS;
   }
 
+/* 
+ *  Find out which sensor got us here.  Look for the longest time
+ */
+  location = N;
+  count = shot->timer_count[N];
+  for (i=N; i <= W; i++ )
+  {
+    if ( count > shot->timer_count[i] )
+    {
+      location = i;
+      count = shot->timer_count[location];
+    }
+  }
+  
 /*
  *  Compute the current geometry based on the speed of sound
  */
@@ -225,7 +239,10 @@ unsigned int compute_hit
  /*
   * All done return
   */
-
+  if ( check_for_inside(shot) == false )
+  {
+    return MISS;
+  }
   return location;
 }
 
@@ -552,6 +569,53 @@ bool find_xy_3D
  
 /*
  *  All done, return
+ */
+  return true;
+}
+
+/*----------------------------------------------------------------
+ *
+ * funtion: check_for_inside
+ *
+ * brief:   Verify the data to check for inside shots
+ * 
+ * return:  TRUE if the shot is good
+ *
+ *----------------------------------------------------------------
+ *
+ * In some cases external shots are picked up by the target and 
+ * returned as valid shots but with garbage results
+ * 
+ * This function looks at the data and results to make sure
+ * that they make sense.
+ * 
+ *--------------------------------------------------------------*/
+static bool check_for_inside
+(
+    shot_record_t* shot             //  record
+)
+{
+  double x, y;                    // Shot location in mm X, Y
+  double radius;
+
+  if ( DLT(DLT_DIAG) )
+  {
+    Serial.print(T("check_for_outside"));
+  }
+
+/*
+ * Where did compute_hit think the shot fell?
+ */
+  x = shot->xphys_mm;         // Distance in mm
+  y = shot->yphys_mm;         // Distance in mm
+  radius = sqrt(sq(x) + sq(y));
+  if ( radius > (json_sensor_dia / 2.0) )
+  {
+    return false;
+  }
+
+/*
+ * Got here, no errors in the mapping
  */
   return true;
 }
